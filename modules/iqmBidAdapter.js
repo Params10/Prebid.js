@@ -3,7 +3,7 @@ import {config} from '../src/config.js';
 import * as utils from '../src/utils.js';
 import {BANNER, VIDEO} from '../src/mediaTypes.js';
 const BIDDER_CODE = 'iqm';
-const ENDPOINT_URL = 'http://172.30.16.137:8989';
+const ENDPOINT_URL = 'https://frontend.stage.iqm.com/static/banner-response.json';
 const VERSION = 'v.1.0.0';
 // const VIDEO_PARAMS = [
 
@@ -99,7 +99,7 @@ export const spec = {
   buildRequests: function(validBidRequests, bidderRequest) {
     // const pageUrl = (bidderRequest && bidderRequest.refererInfo) ? (bidderRequest.refererInfo.referer) : (undefined);
 
-    return validBidRequests.map(bid => createRequest(bid));
+    return validBidRequests.map(bidderRequest => createRequest(bidderRequest));
     // return validBidRequests.map(bid => {
     //   requestId = bid.requestId;
     //   let bidfloor = utils.getBidIdParameter('bidfloor', bid.params);
@@ -180,47 +180,52 @@ export const spec = {
 };
 
 // let requestId = '';
-function createRequest (bidRequest) {
+function createRequest (bidderRequest) {
   var finalRequest = {};
 
   finalRequest.imp = [{}];
-  if (utils.deepAccess(bidRequest, 'mediaTypes.banner')) {
-    finalRequest = createBannerRTB(bidRequest);
+  if (utils.deepAccess(bidderRequest, 'mediaTypes.banner')) {
+    finalRequest = createBannerRTB(bidderRequest);
   }
-  if (utils.deepAccess(bidRequest, 'mediaTypes.banner')) {
+  if (utils.deepAccess(bidderRequest, 'mediaTypes.banner')) {
     // finalRequest.imp[0].video = createVideoRTB(bidRequest);
   }
 }
 
-function createBannerRTB(bidRequest) {
-  const site = getSite(bidRequest);
+function createBannerRTB(bidderRequest) {
+  const site = getSite(bidderRequest);
   let device = getDevice();
 
-  let bidfloor = utils.getBidIdParameter('bidfloor', bidRequest.params);
+  let bidfloor = utils.getBidIdParameter('bidfloor', bidderRequest.params);
   ;
 
   const imp = {
 
+    id: 1,
     secure: 1,
     bidfloor: bidfloor || 0,
     displaymanager: 'Prebid.js',
     displaymanagerver: VERSION,
+    tagId: utils.getBidIdParameter('tagId', bidderRequest.params),
     mediatype: 'banner'
   };
-  imp.banner = getSize(bidRequest.sizes);
+  imp.banner = getSize(bidderRequest.sizes);
   let data = {
     id: bidRequest.bidId,
-    publisherId: utils.getBidIdParameter('publisherId', bidRequest.params),
-    tagId: utils.getBidIdParameter('tagId', bidRequest.params),
-    placementId: utils.getBidIdParameter('placementId', bidRequest.params),
+    publisherId: utils.getBidIdParameter('publisherId', bidderRequest.params),
+
+    placementId: utils.getBidIdParameter('placementId', bidderRequest.params),
     device: device,
     site: site,
     imp: imp
   };
+
   return {
     method: 'POST',
     url: ENDPOINT_URL,
-    data: data
+    data: data,
+    bidderRequest
+
   };
 }
 
@@ -262,6 +267,7 @@ function getSite(bidderRequest) {
   let domain = '';
   let page = '';
   let referrer = '';
+  const Id = 1;
 
   const { refererInfo } = bidderRequest;
 
@@ -286,6 +292,7 @@ function getSite(bidderRequest) {
   return {
     domain,
     page,
+    Id,
     referrer
   };
 };
