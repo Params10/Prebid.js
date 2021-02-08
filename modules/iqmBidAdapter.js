@@ -99,7 +99,7 @@ export const spec = {
   buildRequests: function(validBidRequests, bidderRequest) {
     // const pageUrl = (bidderRequest && bidderRequest.refererInfo) ? (bidderRequest.refererInfo.referer) : (undefined);
 
-    return validBidRequests.map(bidderRequest => createRequest(bidderRequest));
+    return validBidRequests.map(bidRequest => createRequest(bidRequest));
     // return validBidRequests.map(bid => {
     //   requestId = bid.requestId;
     //   let bidfloor = utils.getBidIdParameter('bidfloor', bid.params);
@@ -211,7 +211,7 @@ function createBannerRTB(bidderRequest) {
   };
   imp.banner = getSize(bidderRequest.sizes);
   let data = {
-    id: bidRequest.bidId,
+    id: bidderRequest.bidId,
     publisherId: utils.getBidIdParameter('publisherId', bidderRequest.params),
 
     placementId: utils.getBidIdParameter('placementId', bidderRequest.params),
