@@ -1,5 +1,6 @@
 [
 
     "appnexusBidAdapter",
-    "iqmBidAdapter"
+    "iqmBidAdapter",
+    "adxpremiumAnalyticsAdapter"
 ]
