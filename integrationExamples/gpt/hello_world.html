@@ -100,19 +100,25 @@
 -->
 
 <html>
+    <httpProtocol>
+        <customHeaders>
+        <add name="Access-Control-Allow-Origin" value="*" />
+        </customHeaders>
+        </httpProtocol>
 <head>
-    <script async src="../../build/dev/prebid.js"></script>
+ <!-- <meta http-equiv="Access-Control-Allow-Origin" content="*">  -->
+<script async src="../../build/dev/prebid.js"></script>
     <script async src="https://www.googletagservices.com/tag/js/gpt.js"></script>
     <script>
-        var FAILSAFE_TIMEOUT = 3300;
-        var PREBID_TIMEOUT = 1000;
+        var FAILSAFE_TIMEOUT = 7300;
+        var PREBID_TIMEOUT = 5000;
 
         var adUnits = [{
             requestId : 'abc',
             code: 'div-gpt-ad-1460505748561-0',
             mediaTypes: {
                 banner: {
-                    sizes: [[300, 250], [300,600]],
+                    sizes: [[250, 250], [300,600]],
                 }
             },
             // Replace this object to test a new Adapter!
@@ -171,7 +177,7 @@
 
     <script>
         googletag.cmd.push(function () {
-            googletag.defineSlot('/19968336/header-bid-tag-0', [[300, 250], [300, 600]], 'div-gpt-ad-1460505748561-0').addService(googletag.pubads());
+            googletag.defineSlot('/19968336/header-bid-tag-0', [[250, 250], [300, 600]], 'div-gpt-ad-1460505748561-0').addService(googletag.pubads());
 
             googletag.pubads().enableSingleRequest();
             googletag.enableServices();
