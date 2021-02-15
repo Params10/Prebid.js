@@ -143,46 +143,46 @@
 
     </script>
 
-    <script>
-        var googletag = googletag || {};
-        googletag.cmd = googletag.cmd || [];
+<script>
+    var googletag = googletag || {};
+    googletag.cmd = googletag.cmd || [];
+    googletag.cmd.push(function() {
+        googletag.pubads().disableInitialLoad();
+    });
+
+    pbjs.que.push(function() {
+        pbjs.addAdUnits(adUnits);
+        pbjs.requestBids({
+            bidsBackHandler: sendAdserverRequest,
+            timeout: PREBID_TIMEOUT
+        });
+    });
+
+    function sendAdserverRequest() {
+        if (pbjs.adserverRequestSent) return;
+        pbjs.adserverRequestSent = true;
         googletag.cmd.push(function() {
-            googletag.pubads().disableInitialLoad();
-        });
-
-        pbjs.que.push(function() {
-            pbjs.addAdUnits(adUnits);
-            pbjs.requestBids({
-                bidsBackHandler: sendAdserverRequest,
-                timeout: PREBID_TIMEOUT
+            pbjs.que.push(function() {
+                pbjs.setTargetingForGPTAsync();
+                googletag.pubads().refresh();
             });
         });
+    }
 
-        function sendAdserverRequest() {
-            if (pbjs.adserverRequestSent) return;
-            pbjs.adserverRequestSent = true;
-            googletag.cmd.push(function() {
-                pbjs.que.push(function() {
-                    pbjs.setTargetingForGPTAsync();
-                    googletag.pubads().refresh();
-                });
-            });
-        }
+    setTimeout(function() {
+        sendAdserverRequest();
+    }, FAILSAFE_TIMEOUT);
 
-        setTimeout(function() {
-            sendAdserverRequest();
-        }, FAILSAFE_TIMEOUT);
+</script>
 
-    </script>
+<script>
+    googletag.cmd.push(function () {
+        googletag.defineSlot('/19968336/header-bid-tag-0', [[250, 250], [300, 600]], 'div-gpt-ad-1460505748561-0').addService(googletag.pubads());
 
-    <script>
-        googletag.cmd.push(function () {
-            googletag.defineSlot('/19968336/header-bid-tag-0', [[250, 250], [300, 600]], 'div-gpt-ad-1460505748561-0').addService(googletag.pubads());
-
-            googletag.pubads().enableSingleRequest();
-            googletag.enableServices();
-        });
-    </script>
+        googletag.pubads().enableSingleRequest();
+        googletag.enableServices();
+    });
+</script>
 </head>
 
 <body>
