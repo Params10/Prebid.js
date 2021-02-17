@@ -63,15 +63,23 @@ export const spec = {
         bidRequestsCount: bid.bidRequestsCount,
         bidderRequestId: bid.bidderRequestId,
         transactionId: bid.transactionId,
+        hb_pb_iqm: 0.50,
+        hb_bidder_iqm: 'iqm',
+        hb_adid_iqm: 'bid-5bdbab92aae961cfbdf7465d-5bdbab92aae961cfbdf74653',
+        hb_size_iqm: '250x250',
+        hb_source_iqm: 'client',
+        hb_format_iqm: 'banner'
+
       }
 
-      return {
+      const request = {
         method: 'GET',
         url: ENDPOINT_URL,
         data: finalRequest,
         header: {'Access-Control-Allow-Origin': '*'}
 
       }
+      return request;
     });
   },
 
@@ -92,7 +100,10 @@ export const spec = {
               cpm: responseCPM,
               netRevenue: true,
               creativeId: bid.crid || '',
-              ad: bid.adm || '',
+              ad: bid.adm,
+              adUnitCode: bidRequest.adUnitCode,
+              auctionId: bidRequest.auctionId,
+              mediaType: 'banner',
               width: bid.w || bidRequest.data.imp.banner.w,
               height: bid.h || bidRequest.data.imp.banner.h,
               ttl: bid.ttl || config.getConfig('_bidderTimeout')
