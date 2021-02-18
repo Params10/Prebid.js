@@ -59,7 +59,7 @@ export const spec = {
         site: site,
         imp: imp,
         auctionId: bid.auctionId,
-        requestId: bid.bidId,
+        adUnitCode: bid.adUnitCode,
         bidRequestsCount: bid.bidRequestsCount,
         bidderRequestId: bid.bidderRequestId,
         transactionId: bid.transactionId,
@@ -68,7 +68,8 @@ export const spec = {
         hb_adid_iqm: 'bid-5bdbab92aae961cfbdf7465d-5bdbab92aae961cfbdf74653',
         hb_size_iqm: '250x250',
         hb_source_iqm: 'client',
-        hb_format_iqm: 'banner'
+        hb_format_iqm: 'banner',
+        bidderRequest
 
       }
 
@@ -95,14 +96,14 @@ export const spec = {
           if (responseCPM > 0.0 && bid.impid) {
             // const responseNurl = bid.nurl || '';
             const bidResponse = {
-              requestId: bid.impid,
+              requestId: bidRequest.data.id,
               currency: serverResponse.cur || 'USD',
               cpm: responseCPM,
               netRevenue: true,
               creativeId: bid.crid || '',
               ad: bid.adm,
               adUnitCode: bidRequest.adUnitCode,
-              auctionId: bidRequest.auctionId,
+              auctionId: bidRequest.data.auctionId,
               mediaType: 'banner',
               width: bid.w || bidRequest.data.imp.banner.w,
               height: bid.h || bidRequest.data.imp.banner.h,
