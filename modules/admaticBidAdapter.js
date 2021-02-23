@@ -38,6 +38,7 @@ export const spec = {
 
       var request = {
         adUnitCode: validBidRequest.adUnitCode,
+
         bidId: validBidRequest.bidId,
         transactionId: validBidRequest.transactionId,
         priceType: validBidRequest.params.priceType,

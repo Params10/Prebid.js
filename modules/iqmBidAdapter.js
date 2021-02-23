@@ -4,12 +4,34 @@ import * as utils from '../src/utils.js';
 import {BANNER, VIDEO} from '../src/mediaTypes.js';
 
 const BIDDER_CODE = 'iqm';
-const ENDPOINT_URL = 'https://frontend.stage.iqm.com/static/banner-response.json';
+var ENDPOINT_URL = 'https://frontend.stage.iqm.com/static/banner-response.json';
 const VERSION = 'v.1.0.0';
+
+const VIDEO_ORTB_PARAMS = [
+  'mimes',
+  'minduration',
+  'maxduration',
+  'placement',
+  'protocols',
+  'startdelay',
+  'skip',
+  'skipafter',
+  'minbitrate',
+  'maxbitrate',
+  'delivery',
+  'playbackmethod',
+  'api',
+  'linearity'
+];
+const PRODUCT = {
+  SIAB: 'siab',
+  INVIEW: 'inview',
+  INSTREAM: 'instream'
+};
 
 export const spec = {
 
-  supportMediaTypes: [BANNER, VIDEO],
+  supportedMediaTypes: [BANNER, VIDEO],
   code: BIDDER_CODE,
   aliases: ['iqm'],
 
@@ -23,11 +45,59 @@ export const spec = {
   isBidRequestValid: function (bid) {
     const banner = utils.deepAccess(bid, 'mediaTypes.banner');
     // If there's no banner no need to validate against banner rules
-    if (banner === undefined) {
-      return false;
-    }
+    const videoMediaType = utils.deepAccess(bid, 'mediaTypes.video');
+    const context = utils.deepAccess(bid, 'mediaTypes.video.context');
 
-    return !!(bid && bid.params && bid.params.publisherId && bid.params.placementId && bid.params.tagId);
+    if (bid.mediaType === 'video' || (videoMediaType && context !== 'outstream')) {
+      const videoBidderParams = utils.deepAccess(bid, 'params.video', {});
+
+      // If there's no video no need to validate against video rules
+
+      if (!Array.isArray(videoMediaType.playerSize)) {
+        return false;
+      }
+
+      if (!videoMediaType.context) {
+        return false;
+      }
+
+      const videoParams = {
+        ...videoMediaType,
+        ...videoBidderParams
+      };
+
+      if (!Array.isArray(videoParams.mimes) || videoParams.mimes.length === 0) {
+        return false;
+      }
+
+      if (!Array.isArray(videoParams.protocols) || videoParams.protocols.length === 0) {
+        return false;
+      }
+
+      // If placement if defined, it must be a number
+      if (
+        typeof videoParams.placement !== 'undefined' &&
+        typeof videoParams.placement !== 'number'
+      ) {
+        return false;
+      }
+
+      // If startdelay is defined it must be a number
+      if (
+        videoMediaType.context === 'instream' &&
+        typeof videoParams.startdelay !== 'undefined' &&
+        typeof videoParams.startdelay !== 'number'
+      ) {
+        return false;
+      }
+
+      return !!(bid && bid.params && bid.params.publisherId && bid.params.placementId && bid.params.tagId);
+    } else {
+      if (banner === 'undefined') {
+        return false;
+      }
+      return !!(bid && bid.params && bid.params.publisherId && bid.params.placementId && bid.params.tagId);
+    }
   },
 
   buildRequests: function(validBidRequests, bidderRequest) {
@@ -36,17 +106,21 @@ export const spec = {
       let bidfloor = utils.getBidIdParameter('bidfloor', bid.params);
 
       const imp = {
-        id: 1,
         secure: 1,
         bidfloor: bidfloor || 0,
         displaymanager: 'Prebid.js',
         displaymanagerver: VERSION,
         tagId: utils.getBidIdParameter('tagId', bid.params),
-        mediatype: 'banner',
-        banner: getSize(bid.sizes)
 
       }
-
+      if (utils.deepAccess(bid, 'mediaTypes.banner')) {
+        imp.banner = getSize(bid.sizes);
+        imp.mediatype = 'banner';
+      } else if (utils.deepAccess(bid, 'mediaTypes.video')) {
+        imp.video = _buildVideoORTB(bid);
+        imp.mediatype = 'video';
+        ENDPOINT_URL = 'https://frontend.stage.iqm.com/static/video-response.json';
+      }
       const site = getSite(bid);
       let device = getDevice();
 
@@ -101,15 +175,25 @@ export const spec = {
               cpm: responseCPM,
               netRevenue: true,
               creativeId: bid.crid || '',
-              ad: bid.adm,
+
               adUnitCode: bidRequest.adUnitCode,
               auctionId: bidRequest.data.auctionId,
-              mediaType: 'banner',
-              width: bid.w || bidRequest.data.imp.banner.w,
-              height: bid.h || bidRequest.data.imp.banner.h,
+              mediaType: bidRequest.data.mediaType,
+
               ttl: bid.ttl || config.getConfig('_bidderTimeout')
             };
+            if (bidRequest.data.imp.mediatype === 'video') {
+              bidResponse.width = bid.w || bidRequest.data.imp.video.w;
+              bidResponse.height = bid.h || bidRequest.data.imp.video.h;
 
+              bidResponse.vastXml = bid.adm;
+
+              bidResponse.vastUrl = bid.adm;
+            } else {
+              bidResponse.ad = bid.adm;
+              bidResponse.width = bid.w || bidRequest.data.imp.banner.w;
+              bidResponse.height = bid.h || bidRequest.data.imp.banner.h;
+            }
             bidResponses.push(bidResponse);
           }
         })
@@ -200,6 +284,61 @@ function canAccessTopWindow() {
   } catch (error) {
     return false;
   }
+}
+
+function _getProduct(bidRequest) {
+  const { params, mediaTypes } = bidRequest;
+
+  const { banner, video } = mediaTypes;
+
+  if ((video && !banner) && video.context === 'instream') {
+    return PRODUCT.INSTREAM;
+  }
+
+  return (params.productId === PRODUCT.INVIEW) ? (params.productId) : PRODUCT.SIAB;
+}
+
+function _buildVideoORTB(bidRequest) {
+  const videoAdUnit = utils.deepAccess(bidRequest, 'mediaTypes.video');
+  const videoBidderParams = utils.deepAccess(bidRequest, 'params.video', {});
+  const video = {}
+
+  const videoParams = {
+    ...videoAdUnit,
+    ...videoBidderParams // Bidder Specific overrides
+  };
+
+  const {w, h} = getSize(videoParams.playerSize[0]);
+  video.w = w;
+  video.h = h;
+
+  VIDEO_ORTB_PARAMS.forEach((param) => {
+    if (videoParams.hasOwnProperty(param)) {
+      video[param] = videoParams[param];
+    }
+  });
+  const product = _getProduct(bidRequest);
+  // if (typeof bidRequest.getFloor === 'function') {
+  //   const bidfloors = _getBidFloors(bidRequest, {w: video.w, h: video.h}, VIDEO);
+  // }
+
+  video.placement = video.placement || 2;
+
+  if (product === PRODUCT.INSTREAM) {
+    video.startdelay = video.startdelay || 0;
+    video.placement = 1;
+  };
+
+  // const imp = {
+  //   secure: 1,
+  //   bidfloor: bidfloor || 0,
+  //   displaymanager: 'Prebid.js',
+  //   displaymanagerver: VERSION,
+  //   tagId: utils.getBidIdParameter('tagId', bid.params),
+  //   mediatype: 'video',
+  //   video: video,
+  // }
+  return video;
 }
 
 registerBidder(spec);
