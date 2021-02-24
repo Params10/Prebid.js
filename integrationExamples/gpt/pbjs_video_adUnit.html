@@ -52,14 +52,27 @@
 				}
 			}
 		}]
+		// bids: [{
+		// 	bidder: 'appnexus',
+		// 	params: {
+		// 		placementId: iosDevice ? 13239390 : 13232361, // Add your own placement id here. Note, skippable video is not supported on iOS 
+
+		// 		video: {
+		// 			skipppable: true,
+		// 			playback_method: ['auto_play_sound_off']
+		// 		}
+		// 	}
+		// }]
 	};
 
 	pbjs.que.push(function() {
 		pbjs.addAdUnits(videoAdUnit);
 		pbjs.setConfig({
 			debug: true,
+			usePrebidCache: true,
 			
 			cache: {
+
 				url: 'https://prebid.adnxs.com/pbc/v1/cache'
 			}
 		});

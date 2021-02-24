@@ -143,6 +143,7 @@ export const spec = {
         hb_size_iqm: '250x250',
         hb_source_iqm: 'client',
         hb_format_iqm: 'banner',
+        uuid: bid.bidId,
         bidderRequest
 
       }
@@ -176,9 +177,9 @@ export const spec = {
               netRevenue: true,
               creativeId: bid.crid || '',
 
-              adUnitCode: bidRequest.adUnitCode,
+              adUnitCode: bidRequest.data.adUnitCode,
               auctionId: bidRequest.data.auctionId,
-              mediaType: bidRequest.data.mediaType,
+              mediaType: bidRequest.data.imp.mediatype,
 
               ttl: bid.ttl || config.getConfig('_bidderTimeout')
             };
@@ -186,9 +187,9 @@ export const spec = {
               bidResponse.width = bid.w || bidRequest.data.imp.video.w;
               bidResponse.height = bid.h || bidRequest.data.imp.video.h;
 
-              bidResponse.vastXml = bid.adm;
+              // bidResponse.vastXml = bid.adm;
 
-              bidResponse.vastUrl = bid.adm;
+              bidResponse.vastUrl = 'https://frontend.stage.iqm.com/static/vast-01.xml';
             } else {
               bidResponse.ad = bid.adm;
               bidResponse.width = bid.w || bidRequest.data.imp.banner.w;
