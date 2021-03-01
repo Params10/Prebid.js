@@ -1,170 +1,184 @@
-<html>
-  <head>
-    <script async src="../../build/dev/prebid.js"></script>
-    <script async src="https://www.googletagservices.com/tag/js/gpt.js"></script>
-    <script>
-      (function(window, document) {
-          if (!window.__cmp) {
-              window.__cmp = (function() {
-                  var listen = window.attachEvent || window.addEventListener;
-                  listen('message', function(event) {
-                      window.__cmp.receiveMessage(event);
-                  }, false);
-
-                  function addLocatorFrame() {
-                      if (!window.frames['__cmpLocator']) {
-                          if (document.body) {
-                              var frame = document.createElement('iframe');
-                              frame.style.display = 'none';
-                              frame.name = '__cmpLocator';
-                              document.body.appendChild(frame);
-                          } else {
-                              setTimeout(addLocatorFrame, 5);
-                          }
-                      }
-                  }
-                  addLocatorFrame();
-
-                  var commandQueue = [];
-                  var cmp = function(command, parameter, callback) {
-                      if (command === 'ping') {
-                          if (callback) {
-                              callback({
-                                  gdprAppliesGlobally: !!(window.__cmp && window.__cmp.config && window.__cmp.config.storeConsentGlobally),
-                                  cmpLoaded: false
-                              });
-                          }
-                      } else {
-                          commandQueue.push({
-                              command: command,
-                              parameter: parameter,
-                              callback: callback
-                          });
-                      }
-                  }
-                  cmp.commandQueue = commandQueue;
-                  cmp.receiveMessage = function(event) {
-                      var data = event && event.data && event.data.__cmpCall;
-                      if (data) {
-                          commandQueue.push({
-                              callId: data.callId,
-                              command: data.command,
-                              parameter: data.parameter,
-                              event: event
-                          });
-                      }
-                  };
-                  cmp.config = {
-                      //
-                      // Modify config values here
-                      //
-                      // globalVendorListLocation: 'https://vendorlist.consensu.org/vendorlist.json',
-                      // customPurposeListLocation: './purposes.json',
-                      // globalConsentLocation: './portal.html',
-                      // storeConsentGlobally: false,
-                      // storePublisherData: false,
-                      logging: 'debug',
-                      // localization: {},
-                      // forceLocale: 'en-us'
-                  }
-                  return cmp;
-              }());
-              var t = document.createElement('script');
-              t.async = false;
-              t.src = 'http://acdn.adnxs.com/cmp/cmp.bundle.js';
-              var tag = document.getElementsByTagName('head')[0];
-              tag.appendChild(t);
-          }
-      })(window, document);
-      window.__cmp('showConsentTool');
-  </script>
-
-      <script>
-        var PREBID_TIMEOUT = 700;
-        var FAILSAFE_TIMEOUT = 2500;
-  
-        var adUnits = [{
-          code: 'div-gpt-ad-1460505748561-0',
+<head>
+  <script async src="../../build/dev/prebid.js"></script>
+  <script async src="http://www.googletagservices.com/tag/js/gpt.js"></script>
+  <script>
+      var pbjs = pbjs || {};
+      pbjs.que = pbjs.que || [];
+      var googletag = googletag || {};
+      googletag.cmd = googletag.cmd || [];
+      var PREBID_TIMEOUT = 9000;
+      var adUnits = [{
+          code: 'video1',
           mediaTypes: {
-            banner: {
-              sizes: [[300, 250], [300,600]]
-            }
+              video: {
+                  playerSize: [640, 480],
+                  context: 'outstream'
+              }
           },
-  
-          // Replace this object to test a new Adapter!
-          bids: [{
-            bidder: 'appnexus',
-            params: {
-              placementId: 13144370
-            }
-          }]
-  
-        }];
-  
-        var pbjs = pbjs || {};
-        pbjs.que = pbjs.que || [];
-  
-      </script>
-  
-      <script>
-        var googletag = googletag || {};
-        googletag.cmd = googletag.cmd || [];
-        googletag.cmd.push(function() {
-          googletag.pubads().disableInitialLoad();
-        });
-  
-        pbjs.que.push(function() {
+          bids: [
+              {
+                  //bidder: 'appnexus',
+                  bidder: 'iqm',
+                  params: {
+                     // placementId: 13232385,
+                      publisherId: 'df5fd732-c5f3-11e7-abc4-cec278b6b50a',
+                      tagId: '1c5c9ec2-c5f4-11e7-abc4-cec278b6b50a',
+                     placementId: '50cc36fe-c5f4-11e7-abc4-cec278b6b50a',
+                      bidfloor: 0.50,
+                      video: {
+                        placement :2,
+                        mimes: ['video/mp4'],
+                        protocols: [2,5],
+                        skipppable: true,
+                        playback_method: ['auto_play_sound_off']
+                      },
+                      player: {
+                            progressColor: '#50A8FA',
+                            adPosterColor: '#FFF',
+                            expandInView: false,
+                            collapseOnComplete: true
+                        }
+                  }
+              }
+          ]
+      }];
+      pbjs.que.push(function() {
           pbjs.addAdUnits(adUnits);
-          pbjs.setConfig({
-            consentManagement: {
-              cmpApi: 'iab',
-              timeout: 5000,
-              allowAuctionWithoutConsent: true
-            },
-            pubcid: {
-              enable: false
-            }
-          });
+         
           pbjs.requestBids({
-            bidsBackHandler: sendAdserverRequest,
-            timeout: PREBID_TIMEOUT
+              bidsBackHandler: initAdserver
           });
-        });
-  
-        function sendAdserverRequest() {
-          if (pbjs.adserverRequestSent) return;
-          pbjs.adserverRequestSent = true;
+      });
+      function initAdserver() {
+          if (pbjs.initAdserverSet) return;
+          pbjs.initAdserverSet = true;
           googletag.cmd.push(function() {
-            pbjs.que.push(function() {
-              pbjs.setTargetingForGPTAsync();
-              googletag.pubads().refresh();
-            });
+              pbjs.que.push(function() {
+                  pbjs.setTargetingForGPTAsync();
+                  googletag.pubads().refresh();
+              });
           });
-        }
-  
-        setTimeout(function() {
-           sendAdserverRequest();
-           console.log('timeout in main pbjs fired');
-        }, FAILSAFE_TIMEOUT);
-  
-      </script>  
-      <script>
-        googletag.cmd.push(function () {
-          googletag.defineSlot('/19968336/header-bid-tag-0', [[300, 250], [300, 600]], 'div-gpt-ad-1460505748561-0').addService(googletag.pubads());
-  
+      }
+      setTimeout(function() {
+          initAdserver();
+      }, PREBID_TIMEOUT);
+      googletag.cmd.push(function() {
+          var slot1 = googletag.defineSlot('/19968336/prebid_outstream_adunit_1', [[1, 1]], 'video1').addService(googletag.pubads());
+          googletag.pubads().disableInitialLoad();
           googletag.pubads().enableSingleRequest();
           googletag.enableServices();
-        });
-      </script>
-  </head>
-  
-  <body>
-  <h2>Prebid.js Test</h2>
-  <h5>Div-1</h5>
-  <div id='div-gpt-ad-1460505748561-0'>
-      <script type='text/javascript'>
-        googletag.cmd.push(function() { googletag.display('div-gpt-ad-1460505748561-0'); });
-      </script>
-  </div>
-  </body>
-  </html>
+      });
+  </script>
+</head>
+<!-- INCLUDE PLAYER AND IMA3 PLUGIN SCRIPTS
+First, include the player script from Brightcove. This will
+also be part of the embed code provided by Video Cloud. Then
+include the ima3 plugin script.
+Since we are not configuring the plugin in Video Cloud, we
+need to include this script on the page.  -->
+<body>
+<div id='video1'>
+  <p>Prebid Outstream Video Ad</p>
+  <script type='text/javascript'>
+      googletag.cmd.push(function() {
+          googletag.display('video1');
+      });
+  </script>
+</div>
+</body>
+<!-- <!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Prebid.js video adUnit example</title>
+<link href="http://vjs.zencdn.net/4.7.1/video-js.css" rel="stylesheet">
+<link href="https://raw.githubusercontent.com/theonion/videojs-vast-plugin/master/lib/videojs-contrib-ads/videojs.ads.css" rel="stylesheet" type="text/css">
+<link href="https://raw.githubusercontent.com/theonion/videojs-vast-plugin/master/videojs.vast.css" rel="stylesheet" type="text/css">
+<style type="text/css">
+ .description {
+   background-color:#eee;
+   border: 1px solid #777;
+   padding: 10px;
+   font-size: .8em;
+   line-height: 1.5em;
+   font-family: Verdana, sans-serif;
+ }
+ .example-video-container {
+   display: inline-block;
+ }
+</style>
+<script src="/build/dev/prebid.js" async=true></script>
+<script>
+var pbjs = pbjs || {};
+pbjs.que = pbjs.que || [];
+/*
+adUnits can support video demand requests by setting 'mediaType' to
+'video'. When an adUnit is configured to support video, all bidders
+within that adUnit must be video-enabled as well, as configured in
+adapters.json.
+*/
+var videoAdUnit = {
+ code: 'video1',
+ sizes: [640,480],
+ mediaTypes: { video: {} },
+ bids: [
+   {
+     bidder: 'appnexusAst',
+     params: {
+       placementId: '123456',
+       video: {
+         id: 123,
+         skipppable: true,
+         playback_method: ['auto_play_sound_off']
+       }
+     }
+   }
+ ]
+};
+pbjs.que.push(function(){
+ pbjs.addAdUnits(videoAdUnit);
+ pbjs.requestBids({
+   timeout : 3000,
+   bidsBackHandler : function(bids) {
+     var adserverTag = '<dfp_tag>'; // base ad server tag, see: https://support.google.com/dfp_premium/answer/1068325
+     var options = {
+       'adserver': 'dfp',
+       'code': 'video1' //code that matches the video adUnit declared above
+      };
+     //generate URL
+     var masterTagUrl = pbjs.buildMasterVideoTagFromAdserverTag(adserverTag, options);
+     //send masterTagUrl to the video player
+     invokeVideoPlayer(masterTagUrl);
+   }
+ });
+});
+</script>
+</head>
+<body>
+<div class="example-video-container">
+ <video id="vid1" class="video-js vjs-default-skin" autoplay controls preload="auto"
+     poster="http://video-js.zencoder.com/oceans-clip.png"
+     data-setup='{}'
+     width='640'
+     height='480'
+     >
+   <source src="http://vjs.zencdn.net/v/oceans.mp4" type='video/mp4'>
+   <p>Video Playback Not Supported</p>
+ </video>
+</div>
+<script>
+ var vid1 = videojs('vid1');
+ vid1.muted(true);
+ vid1.ads();
+ /*
+ This function called after prebid is back
+  */
+ function invokeVideoPlayer(url) {
+   vid1.vast({
+     url: url
+   });
+ }
+</script>
+</body>
+</html>
+-->

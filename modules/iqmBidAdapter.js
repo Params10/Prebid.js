@@ -2,7 +2,7 @@ import {registerBidder} from '../src/adapters/bidderFactory.js';
 import {config} from '../src/config.js';
 import * as utils from '../src/utils.js';
 import {BANNER, VIDEO} from '../src/mediaTypes.js';
-
+import {Renderer} from '../src/Renderer.js';
 const BIDDER_CODE = 'iqm';
 var ENDPOINT_URL = 'https://frontend.stage.iqm.com/static/banner-response.json';
 const VERSION = 'v.1.0.0';
@@ -188,8 +188,14 @@ export const spec = {
               bidResponse.height = bid.h || bidRequest.data.imp.video.h;
 
               // bidResponse.vastXml = bid.adm;
-
-              bidResponse.vastUrl = 'https://frontend.stage.iqm.com/static/vast-01.xml';
+              if (bidRequest.data.imp.video.context === 'instream') {
+                bidResponse.vastUrl = bid.nurl;
+              } else if (bidRequest.data.imp.video.context === 'outstream') {
+                bidResponse.vastXml = bid.adm;
+                bidResponse.vastUrl = bid.nurl;
+                bidRequest.vastUrl = bid.nurl;
+              
+              }
             } else {
               bidResponse.ad = bid.adm;
               bidResponse.width = bid.w || bidRequest.data.imp.banner.w;
@@ -308,7 +314,7 @@ function _buildVideoORTB(bidRequest) {
     ...videoAdUnit,
     ...videoBidderParams // Bidder Specific overrides
   };
-
+  video.context = 1;
   const {w, h} = getSize(videoParams.playerSize[0]);
   video.w = w;
   video.h = h;
@@ -328,6 +334,9 @@ function _buildVideoORTB(bidRequest) {
   if (product === PRODUCT.INSTREAM) {
     video.startdelay = video.startdelay || 0;
     video.placement = 1;
+    video.context = 'instream';
+  } else {
+    video.context = 'outstream';
   };
 
   // const imp = {
@@ -340,6 +349,30 @@ function _buildVideoORTB(bidRequest) {
   //   video: video,
   // }
   return video;
+}
+
+function createRenderer(bidResponse) {
+  const renderer = Renderer.install({
+    id: bidResponse.requestId,
+    url: 'https://s2.adform.net/banners/scripts/video/outstream/render.js',
+    loaded: false
+  });
+
+  renderer.setRender(bid => {
+    bid.renderer.push(() => {
+      window.Beachfront.Player(bid.adUnitCode, {
+        adTagUrl: bid.vastUrl,
+        width: bid.data.imp.w,
+        height: bid.data.imp.h,
+        // expandInView: getPlayerBidParam(bidRequest, 'expandInView', false),
+        // collapseOnComplete: getPlayerBidParam(bidRequest, 'collapseOnComplete', true),
+        // progressColor: getPlayerBidParam(bidRequest, 'progressColor'),
+        // adPosterColor: getPlayerBidParam(bidRequest, 'adPosterColor')
+      });
+    });
+  });
+
+  return renderer;
 }
 
 registerBidder(spec);
