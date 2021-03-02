@@ -3,6 +3,8 @@ import {config} from '../src/config.js';
 import * as utils from '../src/utils.js';
 import {BANNER, VIDEO} from '../src/mediaTypes.js';
 import {Renderer} from '../src/Renderer.js';
+const RENDERER_URL = 'https://acdn.adnxs.com/video/outstream/ANOutstreamVideo.js';
+
 const BIDDER_CODE = 'iqm';
 var ENDPOINT_URL = 'https://frontend.stage.iqm.com/static/banner-response.json';
 const VERSION = 'v.1.0.0';
@@ -183,6 +185,11 @@ export const spec = {
 
               ttl: bid.ttl || config.getConfig('_bidderTimeout')
             };
+            bidResponse.adResponse = {
+              content: bid.adm,
+              height: bidRequest.data.imp.video.h,
+              width: bidRequest.data.imp.video.w
+            };
             if (bidRequest.data.imp.mediatype === 'video') {
               bidResponse.width = bid.w || bidRequest.data.imp.video.w;
               bidResponse.height = bid.h || bidRequest.data.imp.video.h;
@@ -193,8 +200,8 @@ export const spec = {
               } else if (bidRequest.data.imp.video.context === 'outstream') {
                 bidResponse.vastXml = bid.adm;
                 bidResponse.vastUrl = bid.nurl;
-                bidRequest.vastUrl = bid.nurl;
-              
+
+                bidResponse.renderer = createRenderer(bidResponse, RENDERER_URL);
               }
             } else {
               bidResponse.ad = bid.adm;
@@ -351,27 +358,35 @@ function _buildVideoORTB(bidRequest) {
   return video;
 }
 
-function createRenderer(bidResponse) {
-  const renderer = Renderer.install({
-    id: bidResponse.requestId,
-    url: 'https://s2.adform.net/banners/scripts/video/outstream/render.js',
-    loaded: false
-  });
-
-  renderer.setRender(bid => {
-    bid.renderer.push(() => {
-      window.Beachfront.Player(bid.adUnitCode, {
-        adTagUrl: bid.vastUrl,
-        width: bid.data.imp.w,
-        height: bid.data.imp.h,
-        // expandInView: getPlayerBidParam(bidRequest, 'expandInView', false),
-        // collapseOnComplete: getPlayerBidParam(bidRequest, 'collapseOnComplete', true),
-        // progressColor: getPlayerBidParam(bidRequest, 'progressColor'),
-        // adPosterColor: getPlayerBidParam(bidRequest, 'adPosterColor')
-      });
+function outstreamRender(bidAd) {
+  bidAd.renderer.push(() => {
+    window.ANOutstreamVideo.renderAd({
+      sizes: [bidAd.w, bidAd.h],
+      width: bidAd.w,
+      height: bidAd.h,
+      targetId: bidAd.adUnitCode,
+      adResponse: bidAd.adResponse,
+      rendererOptions: {
+        showVolume: false,
+        allowFullscreen: false
+      }
     });
   });
+}
 
+function createRenderer(bidAd, url) {
+  const renderer = Renderer.install({
+    id: bidAd.adUnitCode,
+    url: url,
+    loaded: false,
+    config: {'player_height': bidAd.height, 'player_width': bidAd.width},
+    adUnitCode: bidAd.adUnitCode
+  });
+  try {
+    renderer.setRender(outstreamRender);
+  } catch (err) {
+    utils.logWarn('Prebid Error calling setRender on renderer', err);
+  }
   return renderer;
 }
 

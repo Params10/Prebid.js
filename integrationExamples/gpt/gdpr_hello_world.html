@@ -9,6 +9,27 @@
       var PREBID_TIMEOUT = 9000;
       var adUnits = [{
           code: 'video1',
+  //         renderer: {
+  //   url: 'https://acdn.adnxs.com/video/outstream/ANOutstreamVideo.js',
+  //   render: function (bid) {
+  //       adResponse = {
+  //           ad: {
+  //               video: {
+  //                   content: bid.vastXml,
+  //                   player_height: bid.playerHeight,
+  //                   player_width: bid.playerWidth
+  //               }
+  //           }
+  //       }
+  //       // push to render queue because ANOutstreamVideo may not be loaded yet.
+  //       bid.renderer.push(() => {
+  //           ANOutstreamVideo.renderAd({
+  //               targetId: bid.adUnitCode, // target div id to render video.
+  //               adResponse: adResponse
+  //           });
+  //       });
+  //   }
+  // },
           mediaTypes: {
               video: {
                   playerSize: [640, 480],
@@ -20,7 +41,7 @@
                   //bidder: 'appnexus',
                   bidder: 'iqm',
                   params: {
-                     // placementId: 13232385,
+                     placementId: 13232385,
                       publisherId: 'df5fd732-c5f3-11e7-abc4-cec278b6b50a',
                       tagId: '1c5c9ec2-c5f4-11e7-abc4-cec278b6b50a',
                      placementId: '50cc36fe-c5f4-11e7-abc4-cec278b6b50a',
@@ -32,12 +53,9 @@
                         skipppable: true,
                         playback_method: ['auto_play_sound_off']
                       },
-                      player: {
-                            progressColor: '#50A8FA',
-                            adPosterColor: '#FFF',
-                            expandInView: false,
-                            collapseOnComplete: true
-                        }
+               
+
+                        
                   }
               }
           ]
