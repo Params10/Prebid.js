@@ -185,15 +185,15 @@ export const spec = {
 
               ttl: bid.ttl || config.getConfig('_bidderTimeout')
             };
-            bidResponse.adResponse = {
-              content: bid.adm,
-              height: bidRequest.data.imp.video.h,
-              width: bidRequest.data.imp.video.w
-            };
+
             if (bidRequest.data.imp.mediatype === 'video') {
               bidResponse.width = bid.w || bidRequest.data.imp.video.w;
               bidResponse.height = bid.h || bidRequest.data.imp.video.h;
-
+              bidResponse.adResponse = {
+                content: bid.adm,
+                height: bidRequest.data.imp.video.h,
+                width: bidRequest.data.imp.video.w
+              };
               // bidResponse.vastXml = bid.adm;
               if (bidRequest.data.imp.video.context === 'instream') {
                 bidResponse.vastUrl = bid.nurl;
@@ -203,7 +203,7 @@ export const spec = {
 
                 bidResponse.renderer = createRenderer(bidResponse, RENDERER_URL);
               }
-            } else {
+            } else if (bidRequest.data.imp.mediatype === 'banner') {
               bidResponse.ad = bid.adm;
               bidResponse.width = bid.w || bidRequest.data.imp.banner.w;
               bidResponse.height = bid.h || bidRequest.data.imp.banner.h;
