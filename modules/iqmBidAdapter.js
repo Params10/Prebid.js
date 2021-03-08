@@ -128,6 +128,7 @@ export const spec = {
 
       finalRequest = {
 
+        sizes: bid.sizes,
         id: bid.bidId,
         publisherId: utils.getBidIdParameter('publisherId', bid.params),
         placementId: utils.getBidIdParameter('placementId', bid.params),
