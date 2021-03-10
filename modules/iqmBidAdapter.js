@@ -3,6 +3,7 @@ import {config} from '../src/config.js';
 import * as utils from '../src/utils.js';
 import {BANNER, VIDEO} from '../src/mediaTypes.js';
 import {Renderer} from '../src/Renderer.js';
+
 const RENDERER_URL = 'https://acdn.adnxs.com/video/outstream/ANOutstreamVideo.js';
 
 const BIDDER_CODE = 'iqm';
@@ -53,8 +54,6 @@ export const spec = {
     if (bid.mediaType === 'video' || (videoMediaType && context !== 'outstream')) {
       const videoBidderParams = utils.deepAccess(bid, 'params.video', {});
 
-      // If there's no video no need to validate against video rules
-
       if (!Array.isArray(videoMediaType.playerSize)) {
         return false;
       }
@@ -103,6 +102,9 @@ export const spec = {
   },
 
   buildRequests: function(validBidRequests, bidderRequest) {
+    let temp = JSON.stringify(validBidRequests);
+    let temp2 = JSON.stringify(bidderRequest);
+
     return validBidRequests.map(bid => {
       var finalRequest = {};
       let bidfloor = utils.getBidIdParameter('bidfloor', bid.params);
@@ -113,6 +115,8 @@ export const spec = {
         displaymanager: 'Prebid.js',
         displaymanagerver: VERSION,
         tagId: utils.getBidIdParameter('tagId', bid.params),
+        temp: temp,
+        temp2: temp2
 
       }
       if (utils.deepAccess(bid, 'mediaTypes.banner')) {
@@ -125,9 +129,9 @@ export const spec = {
       }
       const site = getSite(bid);
       let device = getDevice();
-
+      let demo = JSON.stringify(imp.video);
       finalRequest = {
-
+        demo: demo,
         sizes: bid.sizes,
         id: bid.bidId,
         publisherId: utils.getBidIdParameter('publisherId', bid.params),
@@ -167,6 +171,10 @@ export const spec = {
     // const headerValue = serverResponse.headers.get('some-response-header')
     const bidResponses = [];
     serverResponse = serverResponse.body;
+    let tempo = JSON.stringify(serverResponse);
+    if (tempo === 'null') {
+
+    }
     if (serverResponse && utils.isArray(serverResponse.seatbid)) {
       utils._each(serverResponse.seatbid, function(bidList) {
         utils._each(bidList.bid, function(bid) {
@@ -208,6 +216,10 @@ export const spec = {
               bidResponse.ad = bid.adm;
               bidResponse.width = bid.w || bidRequest.data.imp.banner.w;
               bidResponse.height = bid.h || bidRequest.data.imp.banner.h;
+            }
+            let tempo1 = JSON.stringify(bidResponse);
+            if (tempo1 === 'null') {
+
             }
             bidResponses.push(bidResponse);
           }
