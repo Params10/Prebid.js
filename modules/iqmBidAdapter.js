@@ -3,13 +3,11 @@ import {config} from '../src/config.js';
 import * as utils from '../src/utils.js';
 import {BANNER, VIDEO} from '../src/mediaTypes.js';
 import {Renderer} from '../src/Renderer.js';
-
+import { OUTSTREAM, INSTREAM } from '../src/video.js';
 const RENDERER_URL = 'https://acdn.adnxs.com/video/outstream/ANOutstreamVideo.js';
-
 const BIDDER_CODE = 'iqm';
-var ENDPOINT_URL = 'https://frontend.stage.iqm.com/static/banner-response.json';
 const VERSION = 'v.1.0.0';
-
+const vid = 'video;'
 const VIDEO_ORTB_PARAMS = [
   'mimes',
   'minduration',
@@ -31,9 +29,9 @@ const PRODUCT = {
   INVIEW: 'inview',
   INSTREAM: 'instream'
 };
+var ENDPOINT_URL = 'https://frontend.stage.iqm.com/static/banner-response.json';
 
 export const spec = {
-
   supportedMediaTypes: [BANNER, VIDEO],
   code: BIDDER_CODE,
   aliases: ['iqm'],
@@ -44,14 +42,11 @@ export const spec = {
    * @param {BidRequest} bid The bid params to validate.
    * @return boolean True if this is a valid bid, and false otherwise.
    */
-
   isBidRequestValid: function (bid) {
     const banner = utils.deepAccess(bid, 'mediaTypes.banner');
-    // If there's no banner no need to validate against banner rules
     const videoMediaType = utils.deepAccess(bid, 'mediaTypes.video');
     const context = utils.deepAccess(bid, 'mediaTypes.video.context');
-
-    if (bid.mediaType === 'video' || (videoMediaType && context !== 'outstream')) {
+    if (bid.mediaType === vid || (videoMediaType && context !== OUTSTREAM)) {
       const videoBidderParams = utils.deepAccess(bid, 'params.video', {});
 
       if (!Array.isArray(videoMediaType.playerSize)) {
@@ -85,7 +80,7 @@ export const spec = {
 
       // If startdelay is defined it must be a number
       if (
-        videoMediaType.context === 'instream' &&
+        videoMediaType.context === INSTREAM &&
         typeof videoParams.startdelay !== 'undefined' &&
         typeof videoParams.startdelay !== 'number'
       ) {
@@ -102,9 +97,6 @@ export const spec = {
   },
 
   buildRequests: function(validBidRequests, bidderRequest) {
-    let temp = JSON.stringify(validBidRequests);
-    let temp2 = JSON.stringify(bidderRequest);
-
     return validBidRequests.map(bid => {
       var finalRequest = {};
       let bidfloor = utils.getBidIdParameter('bidfloor', bid.params);
@@ -115,9 +107,6 @@ export const spec = {
         displaymanager: 'Prebid.js',
         displaymanagerver: VERSION,
         tagId: utils.getBidIdParameter('tagId', bid.params),
-        temp: temp,
-        temp2: temp2
-
       }
       if (utils.deepAccess(bid, 'mediaTypes.banner')) {
         imp.banner = getSize(bid.sizes);
@@ -154,7 +143,6 @@ export const spec = {
         bidderRequest
 
       }
-
       const request = {
         method: 'GET',
         url: ENDPOINT_URL,
@@ -167,20 +155,13 @@ export const spec = {
   },
 
   interpretResponse: function(serverResponse, bidRequest) {
-    // const serverBody = serverResponse.body;
-    // const headerValue = serverResponse.headers.get('some-response-header')
     const bidResponses = [];
     serverResponse = serverResponse.body;
-    let tempo = JSON.stringify(serverResponse);
-    if (tempo === 'null') {
-
-    }
     if (serverResponse && utils.isArray(serverResponse.seatbid)) {
       utils._each(serverResponse.seatbid, function(bidList) {
         utils._each(bidList.bid, function(bid) {
           const responseCPM = parseFloat(bid.price);
           if (responseCPM > 0.0 && bid.impid) {
-            // const responseNurl = bid.nurl || '';
             const bidResponse = {
               requestId: bidRequest.data.id,
               currency: serverResponse.cur || 'USD',
@@ -195,7 +176,7 @@ export const spec = {
               ttl: bid.ttl || config.getConfig('_bidderTimeout')
             };
 
-            if (bidRequest.data.imp.mediatype === 'video') {
+            if (bidRequest.data.imp.mediatype === VIDEO) {
               bidResponse.width = bid.w || bidRequest.data.imp.video.w;
               bidResponse.height = bid.h || bidRequest.data.imp.video.h;
               bidResponse.adResponse = {
@@ -203,23 +184,19 @@ export const spec = {
                 height: bidRequest.data.imp.video.h,
                 width: bidRequest.data.imp.video.w
               };
-              // bidResponse.vastXml = bid.adm;
-              if (bidRequest.data.imp.video.context === 'instream') {
+
+              if (bidRequest.data.imp.video.context === INSTREAM) {
                 bidResponse.vastUrl = bid.nurl;
-              } else if (bidRequest.data.imp.video.context === 'outstream') {
+              } else if (bidRequest.data.imp.video.context === OUTSTREAM) {
                 bidResponse.vastXml = bid.adm;
                 bidResponse.vastUrl = bid.nurl;
 
                 bidResponse.renderer = createRenderer(bidResponse, RENDERER_URL);
               }
-            } else if (bidRequest.data.imp.mediatype === 'banner') {
+            } else if (bidRequest.data.imp.mediatype === BANNER) {
               bidResponse.ad = bid.adm;
               bidResponse.width = bid.w || bidRequest.data.imp.banner.w;
               bidResponse.height = bid.h || bidRequest.data.imp.banner.h;
-            }
-            let tempo1 = JSON.stringify(bidResponse);
-            if (tempo1 === 'null') {
-
             }
             bidResponses.push(bidResponse);
           }
@@ -288,10 +265,6 @@ function getSite(bidderRequest) {
     domain = url.hostname;
     page = refererInfo.referer;
   } else if (refererInfo.stack && refererInfo.stack.length && refererInfo.stack[0]) {
-    // important note check if refererInfo.stack[0] is 'thruly' because a `null` value
-    // will be considered as "localhost" by the parseUrl function.
-    // As the isBidRequestValid returns false when it does not reach the referer
-    // this should never called.
     const url = utils.parseUrl(refererInfo.stack[0]);
     domain = url.hostname;
   }
@@ -318,7 +291,7 @@ function _getProduct(bidRequest) {
 
   const { banner, video } = mediaTypes;
 
-  if ((video && !banner) && video.context === 'instream') {
+  if ((video && !banner) && video.context === INSTREAM) {
     return PRODUCT.INSTREAM;
   }
 
@@ -345,32 +318,16 @@ function _buildVideoORTB(bidRequest) {
     }
   });
   const product = _getProduct(bidRequest);
-  // if (typeof bidRequest.getFloor === 'function') {
-  //   const bidfloors = _getBidFloors(bidRequest, {w: video.w, h: video.h}, VIDEO);
-  // }
-
   video.placement = video.placement || 2;
-
   if (product === PRODUCT.INSTREAM) {
     video.startdelay = video.startdelay || 0;
     video.placement = 1;
-    video.context = 'instream';
+    video.context = INSTREAM;
   } else {
-    video.context = 'outstream';
+    video.context = OUTSTREAM;
   };
-
-  // const imp = {
-  //   secure: 1,
-  //   bidfloor: bidfloor || 0,
-  //   displaymanager: 'Prebid.js',
-  //   displaymanagerver: VERSION,
-  //   tagId: utils.getBidIdParameter('tagId', bid.params),
-  //   mediatype: 'video',
-  //   video: video,
-  // }
   return video;
 }
-
 function outstreamRender(bidAd) {
   bidAd.renderer.push(() => {
     window.ANOutstreamVideo.renderAd({
@@ -386,7 +343,6 @@ function outstreamRender(bidAd) {
     });
   });
 }
-
 function createRenderer(bidAd, url) {
   const renderer = Renderer.install({
     id: bidAd.adUnitCode,
