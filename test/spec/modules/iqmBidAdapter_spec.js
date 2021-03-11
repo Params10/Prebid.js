@@ -99,7 +99,7 @@ describe('iqmAdapter', function () {
     it('sends bid request to ENDPOINT via POS', function () {
       const request = spec.buildRequests(validBidRequests, bidderRequest);
       expect(request[0].url).to.equal(ENDPOINT);
-      expect(request[0].method).to.equal('GET');
+      expect(request[0].method).to.equal('POST');
     });
     it('should attach valid video params to the tag', function () {
       let validBidRequests_video = [{bidder: 'iqm', params: {publisherId: 'df5fd732-c5f3-11e7-abc4-cec278b6b50a', tagId: '1c5c9ec2-c5f4-11e7-abc4-cec278b6b50a', placementId: '50cc36fe-c5f4-11e7-abc4-cec278b6b50a', bidfloor: 0.5, video: {placement: 2, mimes: ['video/mp4'], protocols: [2, 5], skipppable: true, playback_method: ['auto_play_sound_off']}}, crumbs: {pubcid: '09b8f065-9d1b-4a36-bd0c-ea22e2dad807'}, fpd: {context: {pbAdSlot: 'video1'}}, mediaTypes: {video: {playerSize: [[640, 480]], context: 'instream'}}, adUnitCode: 'video1', transactionId: '86795c66-acf9-4dd5-998f-6d5362aaa541', sizes: [[640, 480]], bidId: '28bfb7e2d12897', bidderRequestId: '16e1ce8481bc6d', auctionId: '3140a2ec-d567-4db0-9bbb-eb6fa20ccb71', src: 'client', bidRequestsCount: 1, bidderRequestsCount: 1, bidderWinsCount: 0}];

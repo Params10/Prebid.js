@@ -144,7 +144,7 @@ export const spec = {
 
       }
       const request = {
-        method: 'GET',
+        method: 'POST',
         url: ENDPOINT_URL,
         data: finalRequest,
         header: {'Access-Control-Allow-Origin': '*'}
